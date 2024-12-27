@@ -1,6 +1,7 @@
 import sys
-from PySide6.QtWidgets import QApplication, QMainWindow, QGraphicsView, QGraphicsScene, QFileDialog, QVBoxLayout, QWidget, QPushButton, QHBoxLayout
-from PySide6.QtGui import QPixmap, QImage
+from PySide6.QtWidgets import QApplication, QMainWindow, QGraphicsView, QGraphicsScene, QFileDialog, QVBoxLayout, QWidget, QPushButton, QHBoxLayout, QGraphicsRectItem
+from PySide6.QtGui import QPixmap, QImage, QPen, QColor
+from PySide6.QtCore import Qt, QRectF
 import fitz
 
 class PDFViewer(QMainWindow):
@@ -9,13 +10,13 @@ class PDFViewer(QMainWindow):
         self.setWindowTitle("PDF Viewer")
         self.setGeometry(100, 100, 800, 600)
 
-        #main layout
+        # Main layout
         self.layout = QVBoxLayout()
         self.container = QWidget()
         self.container.setLayout(self.layout)
         self.setCentralWidget(self.container)
 
-        #open PDF button
+        # Open PDF button
         self.openButton = QPushButton("Open PDF")
         self.openButton.clicked.connect(self.OpenPdf)
         self.layout.addWidget(self.openButton)
@@ -30,8 +31,8 @@ class PDFViewer(QMainWindow):
         self.navLayout.addWidget(self.nextButton)
         self.layout.addLayout(self.navLayout)
 
-        #page viewer
-        self.view = QGraphicsView()
+        # Page viewer
+        self.view = GraphicsView()
         self.scene = QGraphicsScene()
         self.view.setScene(self.scene)
         self.layout.addWidget(self.view)
@@ -56,6 +57,7 @@ class PDFViewer(QMainWindow):
             self.scene.clear()
             self.scene.addPixmap(pixmap)
             self.view.setScene(self.scene)
+            self.view.setPdfPage(self.doc, self.currentPage)
 
     def NextPage(self):
         if self.doc and self.currentPage < len(self.doc) - 1:
@@ -67,8 +69,47 @@ class PDFViewer(QMainWindow):
             self.currentPage -= 1
             self.LoadPage()
 
+class GraphicsView(QGraphicsView):
+    def __init__(self):
+        super().__init__()
+        self.pdf_page = None
+        self.current_page = 0
+        self.startPos = None
+        self.endPos = None
+
+    def setPdfPage(self, doc, page_num):
+        self.pdf_page = doc[page_num]
+        self.current_page = page_num
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.startPos = self.mapToScene(event.pos())
+            self.endPos = None
+
+    def mouseMoveEvent(self, event):
+        if self.startPos:
+            self.endPos = self.mapToScene(event.pos())
+            rect = QRectF(self.startPos, self.endPos)
+            self.scene().clearSelection()
+            self.scene().addRect(rect, QPen(QColor(255, 0, 0, 150)))
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.LeftButton and self.startPos and self.endPos:
+            text = self.extractTextFromRect(QRectF(self.startPos, self.endPos))
+            print("Selected text:", text)
+            self.startPos = None
+            self.endPos = None
+
+    def extractTextFromRect(self, rect):
+        if self.pdf_page:
+            x1, y1, x2, y2 = rect.x(), rect.y(), rect.x() + rect.width(), rect.y() + rect.height()
+            rect_coords = fitz.Rect(x1, y1, x2, y2)
+            text = self.pdf_page.get_text("text", clip=rect_coords)
+            return text
+        return ""
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     viewer = PDFViewer()
     viewer.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
