@@ -76,6 +76,7 @@ class GraphicsView(QGraphicsView):
         self.current_page = 0
         self.startPos = None
         self.endPos = None
+        self.currentRectItem = None
 
     def setPdfPage(self, doc, page_num):
         self.pdf_page = doc[page_num]
@@ -91,7 +92,11 @@ class GraphicsView(QGraphicsView):
             self.endPos = self.mapToScene(event.pos())
             rect = QRectF(self.startPos, self.endPos)
             self.scene().clearSelection()
-            self.scene().addRect(rect, QPen(QColor(255, 0, 0, 150)))
+            if self.currentRectItem:
+                self.scene().removeItem(self.currentRectItem)
+            pen = QPen(QColor(128, 128, 128, 150))
+            pen.setWidth(2) 
+            self.currentRectItem = self.scene().addRect(rect, pen)
 
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.LeftButton and self.startPos and self.endPos:
