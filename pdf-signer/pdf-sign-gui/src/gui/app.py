@@ -3,6 +3,8 @@ import os
 from utils.pdf_signer import AddSignature
 from utils.pdf_viewer import PDFViewer
 from PyQt5.QtWidgets import QLineEdit
+import platform
+import subprocess
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -73,6 +75,7 @@ class MainWindow(QMainWindow):
             self.preview_window.setLayout(layout)
             self.preview_window.show()
 
+
     def sign_pdf(self):
         if not self.selected_file:
             QMessageBox.warning(self, "Warning", "Please select a PDF file first!")
@@ -83,14 +86,20 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "Warning", "Please enter a signature text!")
             return
 
-        # Default position for the signature (bottom-right corner)
-        x, y = None, None
+        # Pobieranie nowej pozycji podpisu z podglądu PDF
+        x, y = self.pdf_viewer.get_signature_position()
         output_path = os.path.join(os.path.dirname(self.selected_file), f"signed_{os.path.basename(self.selected_file)}")
 
         # Call AddSignature
         AddSignature(self.selected_file, output_path, signature_text, x, y)
         QMessageBox.information(self, "Success", f"PDF signed successfully and saved as {output_path}")
 
-        # Debugowanie w sign_pdf
-        print(f"Selected file: {self.selected_file}")
-        print(f"Signature text: {signature_text}")
+        self.open_folder(os.path.dirname(output_path))
+
+    def open_folder(self, path):
+        if platform.system() == "Windows":
+            os.startfile(path)
+        elif platform.system() == "Darwin":  # Mac
+            subprocess.Popen(["open", path])
+        else:  # Linux
+            subprocess.Popen(["xdg-open", path])
