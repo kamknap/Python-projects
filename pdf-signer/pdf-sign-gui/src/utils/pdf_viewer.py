@@ -41,10 +41,10 @@ class PDFViewer(QLabel):
         self.signature_label.raise_()  # Upewnij się, że etykieta jest na wierzchu
         self.update_signature_position()  # Aktualizacja pozycji po załadowaniu PDF-a
 
-    def resizeEvent(self, event):
-        """Dostosowanie podpisu przy zmianie rozmiaru okna."""
-        super().resizeEvent(event)
-        self.update_signature_position()
+    # def resizeEvent(self, event):
+    #     """Dostosowanie podpisu przy zmianie rozmiaru okna."""
+    #     super().resizeEvent(event)
+    #     self.update_signature_position()
 
     def mousePressEvent(self, event):
         """Obsługa kliknięcia myszką na podpisie."""
