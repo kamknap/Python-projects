@@ -38,7 +38,7 @@ def AddSignature(inputPdf, outputPdf, signatureText, x=None, y=None):
         output.write(fOut)
 
 inputFolder = r"path"
-outputFolder = r"path"
+outputFolder = r"path\output"
 signatureText = "Jan Kowalski"
 
 for fileName in os.listdir(inputFolder):
