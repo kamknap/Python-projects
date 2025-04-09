@@ -10,27 +10,22 @@ from gui.app import MainWindow
 class TestMainWindow(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        """Tworzymy tylko jedną instancję QApplication, aby uniknąć błędów PyQt5"""
         cls.app = QApplication([])
 
     def setUp(self):
-        """Tworzenie nowego okna dla każdego testu"""
         self.window = MainWindow()
 
     def test_no_file_selected(self):
-        """Test próby podpisania PDF bez wybranego pliku"""
         with patch('PyQt5.QtWidgets.QMessageBox.warning') as mock_warning:
             self.window.sign_pdf()
             mock_warning.assert_called_with(self.window, "Warning", "Please select a PDF file first!")
 
     @patch('PyQt5.QtWidgets.QFileDialog.getOpenFileName', return_value=("test.pdf", "PDF Files (*.pdf)"))
     def test_file_selection(self, mock_get_open_file_name):
-        """Test wyboru pliku PDF"""
         self.window.select_file()
         self.assertEqual(self.window.selected_file, "test.pdf")
 
     def test_empty_signature(self):
-        """Test próby podpisania PDF bez wpisanej treści podpisu"""
         self.window.signature_input.setText('')
         with patch('PyQt5.QtWidgets.QMessageBox.warning') as mock_warning:
             self.window.sign_pdf()
@@ -39,7 +34,6 @@ class TestMainWindow(unittest.TestCase):
     @patch('utils.pdf_signer.AddSignature')
     @patch('PyQt5.QtWidgets.QMessageBox.information')
     def test_sign_pdf_success(self, mock_information, mock_add_signature):
-        """Test poprawnego podpisania pliku PDF"""
         self.window.selected_file = "test.pdf"
         self.window.signature_input.setText("Test Signature")
         self.window.pdf_viewer = Mock()
@@ -51,7 +45,6 @@ class TestMainWindow(unittest.TestCase):
         mock_information.assert_called_with(self.window, "Success", "PDF signed successfully and saved as signed_test.pdf")
 
     def test_close_preview_window(self):
-        """Test zamykania okna podglądu PDF"""
         self.window.selected_file = "test.pdf"
         self.window.select_file()
 
